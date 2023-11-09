@@ -61,7 +61,7 @@ class ServerRequest implements ServerRequestInterface
     {
         $this->serverParams = $serverParams;
 
-        if (!($uri instanceof UriInterface)) {
+        if (!$uri instanceof UriInterface) {
             $uri = new Uri($uri);
         }
 
@@ -75,7 +75,7 @@ class ServerRequest implements ServerRequestInterface
             $this->updateHostFromUri();
         }
 
-        // If we got no body, defer initialization of the stream until ServerRequest::getBody()
+        // if we don't have anything, defer initialization of the stream until ServerRequest::getBody()
         if ('' !== $body && null !== $body) {
             $this->stream = Stream::create($body);
         }

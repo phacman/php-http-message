@@ -52,7 +52,7 @@ class Response implements ResponseInterface
      */
     public function __construct(int $status = 200, array $headers = [], $body = null, string $version = '1.1', string $reason = null)
     {
-        // If we got nobody, defer initialization of the stream until Response::getBody()
+        // if we don't have anything, defer initialization of the stream until Response::getBody()
         if ('' !== $body && null !== $body) {
             $this->stream = Stream::create($body);
         }
@@ -84,7 +84,9 @@ class Response implements ResponseInterface
     public function withStatus(int $code, string $reasonPhrase = ''): ResponseInterface
     {
         if ($code < 100 || $code > 599) {
-            throw new \InvalidArgumentException(sprintf('Status code has to be an integer between 100 and 599. A status code of %d was given', $code));
+            $format = 'Status code has to be an integer between 100 and 599. ';
+            $format .= 'A status code of %d was given.';
+            throw new \InvalidArgumentException(sprintf($format, $code));
         }
 
         $new = clone $this;

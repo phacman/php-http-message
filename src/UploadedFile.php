@@ -62,7 +62,6 @@ class UploadedFile implements UploadedFileInterface
         $this->clientMediaType = $clientMediaType;
 
         if (UPLOAD_ERR_OK === $this->error) {
-            // Depending on the value set file or stream variable.
             if (\is_string($streamOrFile) && '' !== $streamOrFile) {
                 $this->file = $streamOrFile;
             } elseif (\is_resource($streamOrFile)) {
@@ -99,7 +98,13 @@ class UploadedFile implements UploadedFileInterface
         }
 
         if (false === $resource = @fopen($this->file, 'r')) {
-            throw new \RuntimeException(sprintf('The file "%s" cannot be opened: %s', $this->file, error_get_last()['message'] ?? ''));
+            $message = sprintf(
+                'The file "%s" cannot be opened: %s',
+                $this->file,
+                error_get_last()['message'] ?? ''
+            );
+
+            throw new \RuntimeException($message);
         }
 
         return Stream::create($resource);
@@ -118,7 +123,13 @@ class UploadedFile implements UploadedFileInterface
             $this->moved = 'cli' === PHP_SAPI ? @rename($this->file, $targetPath) : @move_uploaded_file($this->file, $targetPath);
 
             if (false === $this->moved) {
-                throw new \RuntimeException(sprintf('Uploaded file could not be moved to "%s": %s', $targetPath, error_get_last()['message'] ?? ''));
+                $message = sprintf(
+                    'Uploaded file could not be moved to "%s": %s',
+                    $targetPath,
+                    error_get_last()['message'] ?? ''
+                );
+
+                throw new \RuntimeException($message);
             }
         } else {
             $stream = $this->getStream();
@@ -127,7 +138,13 @@ class UploadedFile implements UploadedFileInterface
             }
 
             if (false === $resource = @fopen($targetPath, 'w')) {
-                throw new \RuntimeException(sprintf('The file "%s" cannot be opened: %s', $targetPath, error_get_last()['message'] ?? ''));
+                $message = sprintf(
+                    'The file "%s" cannot be opened: %s',
+                    $targetPath,
+                    error_get_last()['message'] ?? ''
+                );
+
+                throw new \RuntimeException($message);
             }
 
             $dest = Stream::create($resource);
