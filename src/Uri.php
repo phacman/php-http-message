@@ -37,6 +37,9 @@ class Uri implements UriInterface
 
     private const CHAR_GEN_DELIMS = ':\/\?#\[\]@';
 
+    private const PATTERN_CHAR = self::CHAR_UNRESERVED.self::CHAR_SUB_DELIMS;
+    private const PATTERN_DELIM = self::CHAR_GEN_DELIMS.self::CHAR_SUB_DELIMS;
+
     /** @var string Uri scheme. */
     private string $scheme = '';
 
@@ -66,9 +69,9 @@ class Uri implements UriInterface
             }
 
             // Apply parse_url parts to a URI.
-            $this->scheme = isset($parts['scheme']) ? strtr($parts['scheme'], StrTrEnum::FROM->value, StrTrEnum::TO->value) : '';
+            $this->scheme = isset($parts['scheme']) ? strtolower($parts['scheme']) : '';
             $this->userInfo = $parts['user'] ?? '';
-            $this->host = isset($parts['host']) ? strtr($parts['host'], StrTrEnum::FROM->value, StrTrEnum::TO->value) : '';
+            $this->host = isset($parts['host']) ? strtolower($parts['host']) : '';
             $this->port = isset($parts['port']) ? $this->filterPort($parts['port']) : null;
             $this->path = isset($parts['path']) ? $this->filterPath($parts['path']) : '';
             $this->query = isset($parts['query']) ? $this->filterQueryAndFragment($parts['query']) : '';
@@ -134,13 +137,8 @@ class Uri implements UriInterface
         $path = $this->path;
 
         if ('' !== $path && '/' !== $path[0]) {
-            if ('' !== $this->host) {
-                // If the path is rootless and an authority is present, the path MUST be prefixed by "/"
-                $path = '/'.$path;
-            }
+            $path = '' !== $this->host ? '/'.$path : $path;
         } elseif (isset($path[1]) && '/' === $path[1]) {
-            // If the path is starting with more than one "/", the
-            // starting slashes MUST be reduced to one.
             $path = '/'.ltrim($path, '/');
         }
 
@@ -162,7 +160,7 @@ class Uri implements UriInterface
     /** {@inheritdoc} */
     public function withScheme(string $scheme): UriInterface
     {
-        if ($this->scheme === $scheme = strtr($scheme, StrTrEnum::FROM->value, StrTrEnum::TO->value)) {
+        if ($this->scheme === $scheme = strtolower($scheme)) {
             return $this;
         }
 
@@ -176,13 +174,22 @@ class Uri implements UriInterface
     /** {@inheritdoc} */
     public function withUserInfo(string $user, string $password = null): UriInterface
     {
-        $info = preg_replace_callback('/['.self::CHAR_GEN_DELIMS.self::CHAR_SUB_DELIMS.']++/', [__CLASS__, 'rawUrlEncodeMatchZero'], $user);
+        $info = preg_replace_callback(
+            '/['.self::PATTERN_DELIM.']++/',
+            [__CLASS__, 'rawUrlEncodeMatchZero'],
+            $user
+        );
+
         if (null !== $password && '' !== $password) {
             if (!\is_string($password)) {
                 throw new \InvalidArgumentException('Password must be a string');
             }
 
-            $info .= ':'.preg_replace_callback('/['.self::CHAR_GEN_DELIMS.self::CHAR_SUB_DELIMS.']++/', [__CLASS__, 'rawUrlEncodeMatchZero'], $password);
+            $info .= ':'.preg_replace_callback(
+                '/['.self::PATTERN_DELIM.']++/',
+                [__CLASS__, 'rawUrlEncodeMatchZero'],
+                $password
+            );
         }
 
         if ($this->userInfo === $info) {
@@ -198,7 +205,7 @@ class Uri implements UriInterface
     /** {@inheritdoc} */
     public function withHost(string $host): UriInterface
     {
-        if ($this->host === $host = strtr($host, StrTrEnum::FROM->value, StrTrEnum::TO->value)) {
+        if ($this->host === $host = strtolower($host)) {
             return $this;
         }
 
@@ -271,47 +278,29 @@ class Uri implements UriInterface
      */
     protected static function createUriString(string $scheme, string $authority, string $path, string $query, string $fragment): string
     {
-        $uri = '';
-        if ('' !== $scheme) {
-            $uri .= $scheme.':';
-        }
-
-        if ('' !== $authority) {
-            $uri .= '//'.$authority;
-        }
+        $uri = '' !== $scheme ? $scheme.':' : '';
+        $uri .= '' !== $authority ? '//'.$authority : '';
 
         if ('' !== $path) {
             if ('/' !== $path[0]) {
-                if ('' !== $authority) {
-                    // If the path is rootless and an authority is present, the path MUST be prefixed by "/"
-                    $path = '/'.$path;
-                }
-            } elseif (isset($path[1]) && '/' === $path[1]) {
-                if ('' === $authority) {
-                    // If the path is starting with more than one "/" and no authority is present, the
-                    // starting slashes MUST be reduced to one.
-                    $path = '/'.ltrim($path, '/');
-                }
+                $path = '' !== $authority ? '/'.$path : $path;
+            } elseif (isset($path[1]) && '/' === $path[1] && '' === $authority) {
+                $path = '/'.ltrim($path, '/');
             }
-
             $uri .= $path;
         }
 
-        if ('' !== $query) {
-            $uri .= '?'.$query;
-        }
-
-        if ('' !== $fragment) {
-            $uri .= '#'.$fragment;
-        }
+        $uri .= '' !== $query ? '?'.$query : '';
+        $uri .= '' !== $fragment ? '#'.$fragment : '';
 
         return $uri;
     }
 
     /**
      * Is a given port non-standard for the current scheme?
-     * @param string $scheme
-     * @param int    $port
+     * @param  string $scheme
+     * @param  int    $port
+     * @return bool
      */
     protected static function isNonStandardPort(string $scheme, int $port): bool
     {
@@ -333,12 +322,20 @@ class Uri implements UriInterface
 
     protected function filterPath(string $path): string
     {
-        return preg_replace_callback('/(?:[^'.self::CHAR_UNRESERVED.self::CHAR_SUB_DELIMS.'%:@\/]++|%(?![A-Fa-f0-9]{2}))/', [__CLASS__, 'rawUrlEncodeMatchZero'], $path);
+        return preg_replace_callback(
+            '/(?:[^'.self::PATTERN_CHAR.'%:@\/]++|%(?![A-Fa-f0-9]{2}))/',
+            [__CLASS__, 'rawUrlEncodeMatchZero'],
+            $path
+        );
     }
 
     protected function filterQueryAndFragment(string $str): string
     {
-        return preg_replace_callback('/(?:[^'.self::CHAR_UNRESERVED.self::CHAR_SUB_DELIMS.'%:@\/\?]++|%(?![A-Fa-f0-9]{2}))/', [__CLASS__, 'rawUrlEncodeMatchZero'], $str);
+        return preg_replace_callback(
+            '/(?:[^'.self::PATTERN_CHAR.'%:@\/\?]++|%(?![A-Fa-f0-9]{2}))/',
+            [__CLASS__, 'rawUrlEncodeMatchZero'],
+            $str
+        );
     }
 
     private static function rawUrlEncodeMatchZero(array $match): string

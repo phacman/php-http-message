@@ -66,13 +66,13 @@ trait MessageTrait
     /** {@inheritdoc} */
     public function hasHeader(string $name): bool
     {
-        return isset($this->headerNames[strtr($name, StrTrEnum::FROM->value, StrTrEnum::TO->value)]);
+        return isset($this->headerNames[strtolower($name)]);
     }
 
     /** {@inheritdoc} */
     public function getHeader(string $name): array
     {
-        $header = strtr($name, StrTrEnum::FROM->value, StrTrEnum::TO->value);
+        $header = strtolower($name);
         if (!isset($this->headerNames[$header])) {
             return [];
         }
@@ -92,7 +92,7 @@ trait MessageTrait
     public function withHeader(string $name, $value): MessageInterface
     {
         $value = $this->validateAndTrimHeader($name, $value);
-        $normalized = strtr($name, StrTrEnum::FROM->value, StrTrEnum::TO->value);
+        $normalized = strtolower($name);
 
         $new = clone $this;
         if (isset($new->headerNames[$normalized])) {
@@ -120,7 +120,7 @@ trait MessageTrait
     /** {@inheritdoc} */
     public function withoutHeader(string $name): MessageInterface
     {
-        $normalized = strtr($name, StrTrEnum::FROM->value, StrTrEnum::TO->value);
+        $normalized = strtolower($name);
         if (!isset($this->headerNames[$normalized])) {
             return $this;
         }
@@ -159,12 +159,10 @@ trait MessageTrait
     {
         foreach ($headers as $header => $value) {
             if (\is_int($header)) {
-                // If a header name was set to a numeric string, PHP will cast the key to an int.
-                // We must cast it back to a string in order to comply with validation.
                 $header = (string) $header;
             }
             $value = $this->validateAndTrimHeader($header, $value);
-            $normalized = strtr($header, StrTrEnum::FROM->value, StrTrEnum::TO->value);
+            $normalized = strtolower($header);
             if (isset($this->headerNames[$normalized])) {
                 $header = $this->headerNames[$normalized];
                 $this->headers[$header] = array_merge($this->headers[$header], $value);
@@ -202,7 +200,6 @@ trait MessageTrait
         }
 
         if (!\is_array($values)) {
-            // This is simple, just one value.
             if ((!is_numeric($values) && !\is_string($values)) || 1 !== preg_match("@^[ \t\x21-\x7E\x80-\xFF]*$@", (string) $values)) {
                 throw new \InvalidArgumentException('Header values must be RFC 7230 compatible strings');
             }
@@ -214,16 +211,12 @@ trait MessageTrait
             throw new \InvalidArgumentException('Header values must be a string or an array of strings, empty array given');
         }
 
-        // Assert No empty array
-        $returnValues = [];
-        foreach ($values as $v) {
-            if ((!is_numeric($v) && !\is_string($v)) || 1 !== preg_match("@^[ \t\x21-\x7E\x80-\xFF]*$@D", (string) $v)) {
+        return array_map(function (string $value) {
+            if (1 !== preg_match("@^[ \t\x21-\x7E\x80-\xFF]*$@D", (string) $value)) {
                 throw new \InvalidArgumentException('Header values must be RFC 7230 compatible strings');
             }
 
-            $returnValues[] = trim((string) $v, " \t");
-        }
-
-        return $returnValues;
+            return trim($value, " \t");
+        }, $values);
     }
 }

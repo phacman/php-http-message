@@ -38,7 +38,7 @@ class Request implements RequestInterface
      */
     public function __construct(string $method, UriInterface|string $uri, array $headers = [], StreamInterface|string $body = null, string $version = '1.1')
     {
-        if (!($uri instanceof UriInterface)) {
+        if (!$uri instanceof UriInterface) {
             $uri = new Uri($uri);
         }
 
@@ -51,7 +51,7 @@ class Request implements RequestInterface
             $this->updateHostFromUri();
         }
 
-        // If we got nobody, defer initialization of the stream until Request::getBody()
+        // if we don't have anything, defer initialization of the stream until Request::getBody()
         if ('' !== $body && null !== $body) {
             $this->stream = Stream::create($body);
         }

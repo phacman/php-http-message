@@ -59,7 +59,7 @@ class HttpFactory implements HttpFactoryInterface
     public function createStreamFromFile(string $filename, string $mode = 'r'): StreamInterface
     {
         if ('' === $filename) {
-            throw new \RuntimeException('Path cannot be empty');
+            throw new \RuntimeException('Filename cannot be empty');
         }
 
         if (false === $resource = @fopen($filename, $mode)) {
@@ -67,7 +67,13 @@ class HttpFactory implements HttpFactoryInterface
                 throw new \InvalidArgumentException(sprintf('The mode "%s" is invalid.', $mode));
             }
 
-            throw new \RuntimeException(sprintf('The file "%s" cannot be opened: %s', $filename, error_get_last()['message'] ?? ''));
+            $message = sprintf(
+                'The file "%s" cannot be opened: %s',
+                $filename,
+                error_get_last()['message'] ?? ''
+            );
+
+            throw new \RuntimeException($message);
         }
 
         return Stream::create($resource);
