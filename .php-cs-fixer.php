@@ -14,6 +14,7 @@ $finder = PhpCsFixer\Finder::create()
     ->ignoreVCSIgnored(true)
     ->in(__DIR__ . '/src')
     ->in(__DIR__ . '/tests')
+    ->in(__DIR__ . '/docs')
 ;
 
 $config = new PhpCsFixer\Config();
