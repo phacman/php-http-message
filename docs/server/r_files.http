@@ -1,0 +1,22 @@
+POST http://localhost:9000
+X-Custom-Header: upload files POST
+Content-Type: multipart/form-data; boundary=WebAppBoundary
+
+--WebAppBoundary
+Content-Disposition: form-data; name="f_01"; filename="f_01.json"
+Content-Type: application/json
+
+< ./f_01.json
+
+--WebAppBoundary
+Content-Disposition: form-data; name="f_02"; filename="f_02.json"
+Content-Type: application/json
+
+< ./f_02.json
+
+--WebAppBoundary
+Content-Disposition: form-data; name="f_03"; filename="f_03.json"
+Content-Type: application/json
+
+< ./f_03.json
+--WebAppBoundary--

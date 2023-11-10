@@ -1,0 +1,9 @@
+PATCH http://localhost:8972
+Content-Type: application/json
+X-Custom-Header: method PATCH
+
+{
+  "data": {
+    "method": "PATCH"
+  }
+}

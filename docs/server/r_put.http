@@ -1,0 +1,9 @@
+PUT http://localhost:9000
+Content-Type: application/json
+X-Custom-Header: method PUT
+
+{
+  "data": {
+    "method": "PUT"
+  }
+}

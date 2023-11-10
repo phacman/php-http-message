@@ -1,0 +1,9 @@
+POST http://localhost:9000
+Content-Type: application/json
+X-Custom-Header: method POST
+
+{
+  "data": {
+    "method": "POST"
+  }
+}

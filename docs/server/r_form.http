@@ -1,0 +1,5 @@
+POST http://localhost:9000
+X-Custom-Header: x-www-form-urlencoded POST
+Content-Type: application/x-www-form-urlencoded
+
+data=form-urlencoded-POST&client_id=keycloak&username=keycloak&password=keycloak&grant_type=password&scope=openid
