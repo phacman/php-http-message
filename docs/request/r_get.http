@@ -1,0 +1,2 @@
+GET http://localhost:9010/hello/world?data=params#hash-value
+X-Custom-Header: method GET

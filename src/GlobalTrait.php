@@ -61,7 +61,9 @@ trait GlobalTrait
      */
     protected static function getBody(): StreamInterface
     {
-        return Stream::create(file_get_contents('php://input'));
+        $resource = @fopen('php://input', 'r');
+
+        return Stream::create($resource);
     }
 
     /**

@@ -1,0 +1,3 @@
+GET http://localhost:9010/hello/world?data=params#hash-value
+Authorization: Basic username password
+X-Custom-Header: Basic Auth

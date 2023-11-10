@@ -1,7 +1,22 @@
 # Http Message
 HttpMessage Implementation: http-message(PSR-7), http-factory(PSR-17).
 
-## Recommended to remember
+## Manual Test
+Use PhpStorm http-files to check request object from the appropriate directory after the server starts.
+
+The files are located in the `docs/...` directory.
+
+#### ServerRequestGlobal
+```shell
+php -S localhost:9000 -t docs/server
+```
+
+#### RequestGlobal
+```shell
+php -S localhost:9010 -t docs/request
+```
+
+## Remember
 #### Final classes
 
 The `final` keyword was removed in version 1.4.0. It was replaced by `@final` annotation.

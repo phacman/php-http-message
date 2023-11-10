@@ -11,6 +11,8 @@
 
 namespace PhacMan\HttpMessage;
 
+use JsonException;
+
 /**
  * Creates a new server request with values from globals.
  *
@@ -50,14 +52,23 @@ class ServerRequestGlobal
     }
 
     /**
+     * @throws JsonException
      * @return array
      */
     protected static function getParsedBody(): array
     {
         $result = $_POST;
+        $contents = static::getBody()->getContents();
 
-        if (static::isForm() && $data = static::getBody()->getContents()) {
-            parse_str($data, $result);
+        if (static::isForm() && $contents) {
+            parse_str($contents, $result);
+        } elseif (!$result && $contents) {
+            $result = json_decode(
+                $contents,
+                true,
+                512,
+                JSON_BIGINT_AS_STRING | JSON_THROW_ON_ERROR
+            );
         }
 
         return $result;
