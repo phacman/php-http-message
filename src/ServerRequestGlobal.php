@@ -42,7 +42,7 @@ class ServerRequestGlobal
             ->withQueryParams($_GET)
             ->withParsedBody($parsedBody);
 
-        if ($uploadedFiles = static::getUploadedFiles()) {
+        if ($uploadedFiles = static::getUploadedFiles($_FILES)) {
             $request = $request->withUploadedFiles($uploadedFiles);
         }
 
@@ -56,23 +56,27 @@ class ServerRequestGlobal
     {
         $result = $_POST;
 
-        if (static::isForm()) {
-            parse_str(static::getBody()->getContents(), $result);
+        if (static::isForm() && $data = static::getBody()->getContents()) {
+            parse_str($data, $result);
         }
 
         return $result;
     }
 
     /**
+     * @param  array $files
      * @return array
      */
-    protected static function getUploadedFiles(): array
+    protected static function getUploadedFiles(array $files): array
     {
         $result = [];
 
-        if ($_FILES) {
-            foreach ($_FILES as $file) {
-                $stream = fopen($file['tmp_name'], 'r');
+        if ($files) {
+            if (\is_array(current($files)['name'])) {
+                $files = static::convertFileData($files);
+            }
+            foreach ($files as $file) {
+                $stream = Stream::create($file['tmp_name']);
                 $result[] = new UploadedFile(
                     $stream,
                     $file['size'],
@@ -80,6 +84,23 @@ class ServerRequestGlobal
                     $file['name'],
                     $file['type']
                 );
+            }
+        }
+
+        return $result;
+    }
+
+    /**
+     * @param  array $files
+     * @return array
+     */
+    protected static function convertFileData(array $files): array
+    {
+        $result = [];
+
+        foreach (current($files) as $key => $items) {
+            foreach ($items as $id => $item) {
+                $result[$id][$key] = $item;
             }
         }
 
