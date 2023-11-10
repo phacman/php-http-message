@@ -1,5 +1,6 @@
 .idea/
 var/
 vendor/
+http/
 composer.lock
 *cache
